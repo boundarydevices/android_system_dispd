@@ -35,20 +35,6 @@
 //define the switch name for this switch
 #define DISPD_SWITCH_NAME "dvi_det"
 
-//Config this based on hardware connections
-#ifdef MX51_BBG_DISPD
-//DI1 -- WVGA
-//DI0 -- DVI
-#define NON_DVI_DISP_PORT "DI1"
-#endif
-
-//Config this based on hardware connections
-#ifdef MX53_SMD_DISPD
-//DI1 -- LVDS
-//DI0 -- HDMI
-#define NON_HDMI_DISP_PORT "DI1"
-#endif
-
 enum uevent_action { action_add, action_remove, action_change };
 
 struct uevent {
@@ -243,66 +229,54 @@ static char *get_uevent_param(struct uevent *event, char *param_name)
 
 //Return 1 if the switch need
 //Rely on the hardware config and kernel parameters
-#if defined(MX51_BBG_DISPD)
-int needDisplaySwitch()
-{
-    int ret = 0;
-    char name[256];
-    FILE *fp;
-    //Read the string in /sys/class/graphics/fb0/name
-    //Check which display port for fb0
-    //Check whether the display port is DVI
-    memset(name, 0 ,256);
-    fp = fopen("/sys/class/graphics/fb0/name", "r");
-    if (!fgets(name, sizeof(name), fp)) {
-        LOGE("Error!Unable to read fb0 name");
-        fclose(fp);
-        return 0;
-    }
-    LOGI("Current FB name:%s",name);
-    fclose(fp);
-    //If it has a string "DI1", switch to DVI DI0 can be done
-    //Otherwise the primarly display is already on DVI DI0
-    if(strstr(name,NON_DVI_DISP_PORT) != NULL) {
-        return 1;
-    }
-    else{
-        return 0;
-    }
-}
-#elif defined(MX53_SMD_DISPD)
+///////////////
+//MX53 SMD:  //
+//DI1 -- LVDS//
+//DI0 -- HDMI//
+///////////////
+//MX51 BBG:  //
+//DI1 -- WVGA//
+//DI0 -- DVI //
+///////////////
 int needDisplaySwitch()
 {
    int ret = 0;
-   char name[256];
+   char fb0_name[256], sec_fb_name[256];
    FILE *fp;
-   //Read the string in /sys/class/graphics/fb0/name
-   //Check which display port for fb0
-   //Check whether the display port is HDMI
-   memset(name, 0 ,256);
+
+   memset(fb0_name, 0 ,256);
    fp = fopen("/sys/class/graphics/fb0/name", "r");
-   if (!fgets(name, sizeof(name), fp)) {
+   if (!fgets(fb0_name, sizeof(fb0_name), fp)) {
         LOGE("Error!Unable to read fb0 name");
         fclose(fp);
         return 0;
    }
-   LOGI("Current FB name:%s",name);
+   LOGI("fb0 name:%s", fb0_name);
    fclose(fp);
-   //If it has a string "DI1", switch to HDMI DI0 can be done
-   //Otherwise the primarly display is already on HDMI DI0
-   if(strstr(name,NON_HDMI_DISP_PORT) != NULL) {
-        return 1;
-   }
-   else{
+
+   memset(sec_fb_name, 0 ,256);
+   fp = fopen("/sys/devices/platform/mxc_ddc.0/fb_name", "r");
+   if (fp == NULL)
+	   fp = fopen("/sys/devices/platform/sii902x.0/fb_name", "r");
+   if (fp == NULL) {
+        LOGI("NO secondary display device");
+        fclose(fp);
         return 0;
    }
+
+   if (!fgets(sec_fb_name, sizeof(sec_fb_name), fp)) {
+        LOGI("Cannot get secondary fb name");
+        fclose(fp);
+        return 0;
+   }
+   LOGI("secondary fb name:%s", sec_fb_name);
+   fclose(fp);
+
+   if(strcmp(fb0_name, sec_fb_name))
+        return 1;
+   else
+        return 0;
 }
-#else
-int needDisplaySwitch()
-{
-    return 0;
-}
-#endif
 
 /*
  * ---------------
