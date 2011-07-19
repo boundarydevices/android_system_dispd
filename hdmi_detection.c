@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/* Copyright (c) 2010-2011 Freescale Semiconductor, Inc. */
+/* Copyright (C) 2010-2011 Freescale Semiconductor, Inc. */
 
 #include <stdlib.h>
 #include <string.h>
@@ -57,7 +57,7 @@ int hdmi_detection_bootstrap()
     event_state[strlen(event_state) -1] = '\0';
     sprintf(tmp, "EVENT=%s", event_state);
     uevent_params[0] = (char *) strdup(tmp);
-    uevent_params[2] = (char *) NULL;
+    uevent_params[1] = (char *) NULL;
 
     if (simulate_uevent("sii902x", SYSFS_CLASS_HDMI_DETECTION_PATH, "add", uevent_params) < 0) {
         LOGE("Error simulating uevent (%s)", strerror(errno));
