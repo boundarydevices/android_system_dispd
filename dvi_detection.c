@@ -57,7 +57,7 @@ int dvi_detection_bootstrap()
     event_state[strlen(event_state) -1] = '\0';
     sprintf(tmp, "EVENT=%s", event_state);
     uevent_params[0] = (char *) strdup(tmp);
-    uevent_params[2] = (char *) NULL;
+    uevent_params[1] = (char *) NULL;
 
     if (simulate_uevent("mxc_ddc", SYSFS_CLASS_DVI_DETECTION_PATH, "add", uevent_params) < 0) {
         LOGE("Error simulating uevent (%s)", strerror(errno));
