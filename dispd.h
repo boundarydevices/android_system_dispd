@@ -23,10 +23,13 @@
 #include "cutils/log.h"
 
 typedef int boolean;
-enum {
+/*enum {
     false = 0,
     true = 1
-};
+};*/
+
+#define false 0
+#define true 1
 
 #define DEVPATH "/dev/block/"
 #define DEVPATHLENGTH 11
