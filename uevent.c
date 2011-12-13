@@ -59,11 +59,13 @@ static char *get_uevent_param(struct uevent *event, char *param_name);
 static int handle_switch_event(struct uevent *);
 static int handle_sii9022_event(struct uevent *);
 static int handle_dvi_event(struct uevent *);
+static int handle_mxc_hdmi_event(struct uevent *);
 
 static struct uevent_dispatch dispatch_table[] = {
     { "switch", NULL, handle_switch_event }, 
     { "mxc_ddc", "/devices/platform/mxc_ddc.0", handle_dvi_event },
-    { "sii902x", "/devices/platform/sii902x.0",handle_sii9022_event }, 
+    { "sii902x", "/devices/platform/sii902x.0",handle_sii9022_event },
+    { "mxc_hdmi", "/devices/platform/mxc_hdmi", handle_mxc_hdmi_event },
     { NULL, NULL }
 };
 
@@ -340,6 +342,29 @@ static int handle_sii9022_event(struct uevent *event)
             dispmgr_connected_set(false);
         }
     } 
+
+    return 0;
+}
+/*
+ * ---------------
+ * Uevent Handlers for HDMI plugin and plugout
+ * ---------------
+ */
+static int handle_mxc_hdmi_event(struct uevent *event)
+{
+    char *state = get_uevent_param(event, "EVENT");
+
+    LOGI("handle_sii9022_event: EVENT %s",state);
+    //If dvi is already the primarly display, not need to do the switch
+    //Because the hdmi driver hot-plug function is not ready, temporily shield this code.
+    //When the driver is ready, this code should be used.
+    //if (needDisplaySwitch()) {
+        if (!strcmp(state, "plugin")) {
+            dispmgr_connected_set(true);
+        } else {
+            dispmgr_connected_set(false);
+        }
+    //}
 
     return 0;
 }
