@@ -42,6 +42,7 @@
 #include "dispmgr.h"
 #include "dvi_detection.h"
 #include "hdmi_detection.h"
+#include "sii902x_detection.h"
 
 #define DISPD_SOCKET "dispd"
 
@@ -116,6 +117,7 @@ int main(int argc, char **argv)
     // Switch
     switch_bootstrap();
     dvi_detection_bootstrap();
+    sii902x_detection_bootstrap();
     hdmi_detection_bootstrap();
 
     bootstrap = 0;

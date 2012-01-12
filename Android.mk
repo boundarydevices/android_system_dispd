@@ -9,6 +9,7 @@ LOCAL_SRC_FILES:=                \
                   switch.c \
 		  dvi_detection.c \
 		  hdmi_detection.c \
+                  sii902x_detection.c \
                   uevent.c \
                   cmd_dispatch.c
 

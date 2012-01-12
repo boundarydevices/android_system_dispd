@@ -354,7 +354,7 @@ static int handle_mxc_hdmi_event(struct uevent *event)
 {
     char *state = get_uevent_param(event, "EVENT");
 
-    LOGI("handle_sii9022_event: EVENT %s",state);
+    LOGI("handle_mxc_hdmi_event: EVENT %s",state);
     //If dvi is already the primarly display, not need to do the switch
     //Because the hdmi driver hot-plug function is not ready, temporily shield this code.
     //When the driver is ready, this code should be used.

@@ -22,8 +22,8 @@
 
 #include "dispd.h"
 
-#define SYSFS_CLASS_HDMI_DETECTION_PATH "/devices/platform/mxc_hdmi"
+#define SYSFS_CLASS_HDMI_DETECTION_PATH "/devices/platform/sii902x.0"
 
-int hdmi_detection_bootstrap();
+int sii902x_detection_bootstrap();
 
 #endif
