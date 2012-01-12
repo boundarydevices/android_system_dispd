@@ -30,9 +30,9 @@
 
 #define DEBUG_BOOTSTRAP 0
 
-#define SYSFS_CLASS_HDMI_DETECTION_PATH_STATE "/sys/devices/platform/mxc_hdmi/cable_state"
+#define SYSFS_CLASS_HDMI_DETECTION_PATH_STATE "/sys/devices/platform/sii902x.0/cable_state"
 
-int hdmi_detection_bootstrap()
+int sii902x_detection_bootstrap()
 {
     char filename[255];
     char event_state[255];
@@ -59,7 +59,7 @@ int hdmi_detection_bootstrap()
     uevent_params[0] = (char *) strdup(tmp);
     uevent_params[1] = (char *) NULL;
 
-    if (simulate_uevent("mxc_hdmi", SYSFS_CLASS_HDMI_DETECTION_PATH, "add", uevent_params) < 0) {
+    if (simulate_uevent("sii902x", SYSFS_CLASS_HDMI_DETECTION_PATH, "add", uevent_params) < 0) {
         LOGE("Error simulating uevent (%s)", strerror(errno));
         return -errno;
     }
