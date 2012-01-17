@@ -260,6 +260,8 @@ int needDisplaySwitch()
    fp = fopen("/sys/devices/platform/mxc_ddc.0/fb_name", "r");
    if (fp == NULL)
 	   fp = fopen("/sys/devices/platform/sii902x.0/fb_name", "r");
+   if (fp == NULL)
+	   fp = fopen("/sys/devices/platform/mxc_hdmi/fb_name", "r");
    if (fp == NULL) {
         LOGI("NO secondary display device");
         fclose(fp);
@@ -358,13 +360,13 @@ static int handle_mxc_hdmi_event(struct uevent *event)
     //If dvi is already the primarly display, not need to do the switch
     //Because the hdmi driver hot-plug function is not ready, temporily shield this code.
     //When the driver is ready, this code should be used.
-    //if (needDisplaySwitch()) {
+    if ((state != NULL) && needDisplaySwitch()) {
         if (!strcmp(state, "plugin")) {
             dispmgr_connected_set(true);
         } else {
             dispmgr_connected_set(false);
         }
-    //}
+    }
 
     return 0;
 }
