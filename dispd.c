@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/* Copyright (c) 2010-2011 Freescale Semiconductor, Inc. */
+/* Copyright (c) 2010-2012 Freescale Semiconductor, Inc. */
 
 #include <errno.h>
 #include <stdio.h>
@@ -43,6 +43,7 @@
 #include "dvi_detection.h"
 #include "hdmi_detection.h"
 #include "sii902x_detection.h"
+#include "fb_detection.h"
 
 #define DISPD_SOCKET "dispd"
 
@@ -114,11 +115,7 @@ int main(int argc, char **argv)
 
     bootstrap = 1;
 
-    // Switch
-    switch_bootstrap();
-    dvi_detection_bootstrap();
-    sii902x_detection_bootstrap();
-    hdmi_detection_bootstrap();
+	fb_detection_bootstrap();
 
     bootstrap = 0;
     /*
@@ -164,6 +161,7 @@ int main(int argc, char **argv)
 
             alen = sizeof(addr);
 
+            LOG_DISP("Accepted connection from framework 1");
             if (fw_sock != -1) {
                 LOGE("Dropping duplicate framework connection");
                 int tmp = accept(door_sock, &addr, &alen);
@@ -197,7 +195,7 @@ int main(int argc, char **argv)
         }
 
         if (FD_ISSET(uevent_sock, &read_fds)) {
-            //LOG_DISP("process uevent from kernel");
+            LOG_DISP("process uevent from kernel");
             if ((rc = process_uevent_message(uevent_sock)) < 0) {
                 LOGE("Error processing uevent msg (%s)", strerror(errno));
             }
@@ -234,4 +232,30 @@ int send_msg_with_data(char *message, char *data)
     strcpy(buffer, message);
     strcat(buffer, data);
     return send_msg(buffer);
+}
+
+int send_msg_with_code(int code, char *message, int fbid)
+{
+    char *buf;
+    const char* fmt;
+    const char* arg;
+    char tmp[1];
+    int  len;
+    char fb[1];
+    if(fbid >= 0){
+        fmt = "%.3d %s %s";
+        fb[0] =  fbid + 48;
+        arg = fb;
+    }else {
+        fmt = "%.3d %s";
+        arg = NULL;
+    }
+    
+    /* Measure length of required buffer */
+    len = snprintf(tmp, sizeof tmp, fmt, code, message, arg);
+    /* Allocate in the stack, then write to it */
+    buf = (char*)alloca(len+1);
+    snprintf(buf, len+1, fmt, code, message, arg);
+    /* Send the zero-terminated message */
+    return send_msg(buf);
 }

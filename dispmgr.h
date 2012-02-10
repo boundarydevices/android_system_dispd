@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/* Copyright (c) 2010-2011 Freescale Semiconductor, Inc. */
+/* Copyright (c) 2010-2012 Freescale Semiconductor, Inc. */
 
 #ifndef _DISPMGR_H
 #define _DISPGR_H
@@ -24,7 +24,7 @@
 
 #include "dispd.h"
 
-int dispmgr_send_status(void);
-int dispmgr_enable_disp(boolean enabled);
-int dispmgr_connected_set(boolean enabled);
+int dispmgr_send_status();
+int dispmgr_enable_disp(int fbid, boolean enabled);
+int dispmgr_connected_set(int fbid, boolean enabled);
 #endif

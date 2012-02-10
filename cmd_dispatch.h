@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/* Copyright (c) 2010-2011 Freescale Semiconductor, Inc. */
+/* Copyright (c) 2010-2012 Freescale Semiconductor, Inc. */
 
 #ifndef _CMD_DISPATCH_H
 #define _CMD_DISPATCH_H
@@ -25,6 +25,6 @@
 #define DISPD_CMD_DISABLE_DISP        "disable_display"
 #define DISPD_CMD_SEND_DISP_STATUS    "send_display_status"
 
-
+#define CMD_ARGS_MAX 16
 
 #endif

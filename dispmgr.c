@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/* Copyright (c) 2010-2011 Freescale Semiconductor, Inc. */
+/* Copyright (c) 2010-2012 Freescale Semiconductor, Inc. */
 
 #include <stdlib.h>
 #include <string.h>
@@ -35,19 +35,19 @@
 
 #define DEBUG_DISPMGR 0
 
-int dispmgr_enable_disp(boolean enabled)
+int dispmgr_enable_disp(int fbid, boolean enabled)
 {
     LOGI("dispmgr_enable_disp enabled %d", enabled);
-    return disp_enabled_set(enabled);
+    return disp_enabled_set(fbid, enabled);
 }
 
-int dispmgr_connected_set(boolean enabled)
+int dispmgr_connected_set(int fbid, boolean enabled)
 {
     LOGI("dispmgr_connected_set enabled %d", enabled);
-    return disp_connected_set(enabled);
+    return disp_connected_set(fbid, enabled);
 }
 
-int dispmgr_send_status(void)
+int dispmgr_send_status()
 {
     int rc;
 

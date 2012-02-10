@@ -10,6 +10,7 @@ LOCAL_SRC_FILES:=                \
 		  dvi_detection.c \
 		  hdmi_detection.c \
                   sii902x_detection.c \
+				  fb_detection.c \
                   uevent.c \
                   cmd_dispatch.c
 
