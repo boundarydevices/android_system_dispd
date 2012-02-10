@@ -1,7 +1,7 @@
 
 /*
  * Copyright (C) 2008 The Android Open Source Project
- * Copyright (C) 2010-2011 Freescale Semiconductor, Inc.
+ * Copyright (C) 2010-2012 Freescale Semiconductor, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@
 #include "dispd.h"
 #include "uevent.h"
 #include "dispmgr.h"
+#include "fb_detection.h"
 
 #define DEBUG_UEVENT 0
 
@@ -36,6 +37,8 @@
 #define DISPD_SWITCH_NAME "dvi_det"
 
 enum uevent_action { action_add, action_remove, action_change };
+
+
 
 struct uevent {
     char *path;
@@ -60,13 +63,15 @@ static int handle_switch_event(struct uevent *);
 static int handle_sii9022_event(struct uevent *);
 static int handle_dvi_event(struct uevent *);
 static int handle_mxc_hdmi_event(struct uevent *);
+static int handle_mxc_ldb_event(struct uevent *);
 
 static struct uevent_dispatch dispatch_table[] = {
     { "switch", NULL, handle_switch_event }, 
     { "mxc_ddc", "/devices/platform/mxc_ddc.0", handle_dvi_event },
     { "sii902x", "/devices/platform/sii902x.0",handle_sii9022_event },
     { "mxc_hdmi", "/devices/platform/mxc_hdmi", handle_mxc_hdmi_event },
-    { NULL, NULL }
+    { "mxc_ldb", "/devices/platform/ldb", handle_mxc_ldb_event },    
+    { NULL, NULL, NULL }
 };
 
 int process_uevent_message(int socket)
@@ -143,6 +148,7 @@ int simulate_uevent(char *subsys, char *path, char *action, char **params)
 
     memset(event, 0, sizeof(struct uevent));
 
+    LOGW("subsys =%s , path=%s",subsys,path );
     event->subsystem = strdup(subsys);
 
     if (!strcmp(action, "add"))
@@ -291,14 +297,14 @@ static int handle_switch_event(struct uevent *event)
 {
     char *name = get_uevent_param(event, "SWITCH_NAME");
     char *state = get_uevent_param(event, "SWITCH_STATE");
-
+    int fbid = getDisplayfbid(event->path);
     LOGI("handle_switch_event: state %s",state);
     //If dvi is already the primarly display, not need to do the switch
-    if ((!strcmp(name, DISPD_SWITCH_NAME))&&needDisplaySwitch()) {
+    if ((!strcmp(name, DISPD_SWITCH_NAME))) {
         if (!strcmp(state, "online")) {
-            dispmgr_connected_set(true);
+            dispmgr_connected_set(fbid, true);
         } else {
-            dispmgr_connected_set(false);
+            dispmgr_connected_set(fbid, false);
         }
     } 
 
@@ -313,16 +319,14 @@ static int handle_switch_event(struct uevent *event)
 static int handle_dvi_event(struct uevent *event)
 {
     char *state = get_uevent_param(event, "EVENT");
-
+    int fbid = getDisplayfbid(event->path);
     LOGI("handle_dvi_event: EVENT %s",state);
     //If dvi is already the primarly display, not need to do the switch
-    if (needDisplaySwitch()) {
         if (!strcmp(state, "plugin")) {
-            dispmgr_connected_set(true);
+            dispmgr_connected_set(fbid, true);
         } else {
-            dispmgr_connected_set(false);
+            dispmgr_connected_set(fbid, false);
         }
-    } 
 
     return 0;
 }
@@ -334,16 +338,14 @@ static int handle_dvi_event(struct uevent *event)
 static int handle_sii9022_event(struct uevent *event)
 {
     char *state = get_uevent_param(event, "EVENT");
-
+    int fbid = getDisplayfbid(event->path);
     LOGI("handle_sii9022_event: EVENT %s",state);
     //If dvi is already the primarly display, not need to do the switch
-    if (needDisplaySwitch()) {
         if (!strcmp(state, "plugin")) {
-            dispmgr_connected_set(true);
+            dispmgr_connected_set(fbid, true);
         } else {
-            dispmgr_connected_set(false);
+            dispmgr_connected_set(fbid, false);
         }
-    } 
 
     return 0;
 }
@@ -355,16 +357,50 @@ static int handle_sii9022_event(struct uevent *event)
 static int handle_mxc_hdmi_event(struct uevent *event)
 {
     char *state = get_uevent_param(event, "EVENT");
-
-    LOGI("handle_mxc_hdmi_event: EVENT %s",state);
+    int fbid = getDisplayfbid(event->path);
+    LOGI("handle_mxc_hdmi_event: EVENT %s, fbid %d",state, fbid);
+    
+    if(fbid < 0) {
+        LOGE("error fbid");
+        return 0;
+    }
     //If dvi is already the primarly display, not need to do the switch
     //Because the hdmi driver hot-plug function is not ready, temporily shield this code.
     //When the driver is ready, this code should be used.
-    if ((state != NULL) && needDisplaySwitch()) {
+    if (state != NULL) {
         if (!strcmp(state, "plugin")) {
-            dispmgr_connected_set(true);
+            dispmgr_connected_set(fbid, true);
         } else {
-            dispmgr_connected_set(false);
+            dispmgr_connected_set(fbid, false);
+        }
+    }
+
+    return 0;
+}
+
+/*
+ * ---------------
+ * Uevent Handlers for HDMI plugin and plugout
+ * ---------------
+ */
+static int handle_mxc_ldb_event(struct uevent *event)
+{
+    char *state = get_uevent_param(event, "EVENT");
+    int fbid = getDisplayfbid(event->path);
+    LOGI("handle_mxc_ldb_event: EVENT %s, fbid %d",state, fbid);
+    
+    if(fbid < 0) {
+        LOGE("error fbid");
+        return 0;
+    }
+    //If dvi is already the primarly display, not need to do the switch
+    //Because the hdmi driver hot-plug function is not ready, temporily shield this code.
+    //When the driver is ready, this code should be used.
+    if (state != NULL) {
+        if (!strcmp(state, "plugin")) {
+            dispmgr_connected_set(fbid, true);
+        } else {
+            dispmgr_connected_set(fbid, false);
         }
     }
 

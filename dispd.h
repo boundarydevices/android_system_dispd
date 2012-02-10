@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* Copyright (c) 2010-2011 Freescale Semiconductor, Inc. */
+/* Copyright (c) 2010-2012 Freescale Semiconductor, Inc. */
 
 #ifndef DISPD_H__
 #define DISPD_H__
@@ -61,5 +61,6 @@ int switch_bootstrap(void);
 
 int send_msg(char *msg);
 int send_msg_with_data(char *msg, char *data);
+int send_msg_with_code(int codec, char *msg, int fbid);
 extern int bootstrap;
 #endif

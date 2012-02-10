@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
-/* Copyright (c) 2010-2011 Freescale Semiconductor, Inc. */
+/* Copyright (c) 2010-2012 Freescale Semiconductor, Inc. */
 
 #ifndef _UEVENT_MSG_H
 #define _UEVENT_MSG_H
+
 int simulate_uevent(char *subsys, char *path, char *action, char **params);
 #endif
