@@ -112,7 +112,7 @@ int getDisplayfbid(char *path)
     
     int i;
     for(i = 0; fb_table[i].fb_path != NULL; i++) {
-        if(!strcmp(fb_table[i].dev_path, path))
+        if(fb_table[i].dev_path != NULL && !strcmp(fb_table[i].dev_path, path))
         {
             return fb_table[i].fb_id;
         }
