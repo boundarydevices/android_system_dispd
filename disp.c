@@ -155,7 +155,7 @@ int get_available_mode(int fbid, const char *mode_list)
 	char *start = p;
 	char *end   = p;
     int len = 0;
-    if(!p) return NULL;
+    if(!p) return 0;
 
 
 	while(p[0])
