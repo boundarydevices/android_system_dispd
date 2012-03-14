@@ -64,6 +64,7 @@ static int handle_sii9022_event(struct uevent *);
 static int handle_dvi_event(struct uevent *);
 static int handle_mxc_hdmi_event(struct uevent *);
 static int handle_mxc_ldb_event(struct uevent *);
+static int handle_unknown_event(struct uevent *);
 
 static struct uevent_dispatch dispatch_table[] = {
     { "switch", NULL, handle_switch_event }, 
@@ -71,6 +72,7 @@ static struct uevent_dispatch dispatch_table[] = {
     { "sii902x", "/devices/platform/sii902x.0",handle_sii9022_event },
     { "mxc_hdmi", "/devices/platform/mxc_hdmi", handle_mxc_hdmi_event },
     { "mxc_ldb", "/devices/platform/ldb", handle_mxc_ldb_event },    
+    { "UNKNOWN", "UNKNOWN", handle_unknown_event},
     { NULL, NULL, NULL }
 };
 
@@ -389,6 +391,35 @@ static int handle_mxc_ldb_event(struct uevent *event)
     int fbid = getDisplayfbid(event->path);
     LOGI("handle_mxc_ldb_event: EVENT %s, fbid %d",state, fbid);
     
+    if(fbid < 0) {
+        LOGE("error fbid");
+        return 0;
+    }
+    //If dvi is already the primarly display, not need to do the switch
+    //Because the hdmi driver hot-plug function is not ready, temporily shield this code.
+    //When the driver is ready, this code should be used.
+    if (state != NULL) {
+        if (!strcmp(state, "plugin")) {
+            dispmgr_connected_set(fbid, true);
+        } else {
+            dispmgr_connected_set(fbid, false);
+        }
+    }
+
+    return 0;
+}
+
+/*
+ * ---------------
+ * Uevent Handlers for unknown fb device plugin and plugout
+ * ---------------
+ */
+static int handle_unknown_event(struct uevent *event)
+{
+    char *state = get_uevent_param(event, "EVENT");
+    int fbid = getDisplayfbid(event->path);
+    LOGI("handle_unknown_event: EVENT %s, fbid %d",state, fbid);
+
     if(fbid < 0) {
         LOGE("error fbid");
         return 0;

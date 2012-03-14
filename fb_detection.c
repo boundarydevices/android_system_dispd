@@ -41,18 +41,15 @@ int fb_detection_bootstrap()
     char tmp[255];
     char *uevent_params[2];
     FILE *fp;
-    boolean  found;
-
 
     LOGI("fb_detection_bootstrap IN");
     int i,j;
-    
+
     for(i = 0; fb_table[i].fb_path != NULL; i++) {
         memset(path_state,    0, 255);
         memset(path_modalias, 0, 255);
         memset(event_state,   0, 255);
         memset(event_device,  0, 255);
-        found = false;
         
             strcpy(path_state,fb_table[i].fb_path);
             strcat(path_state,SYSFS_CLASS_FB_DETECTION_PATH_STATE);
@@ -86,15 +83,32 @@ int fb_detection_bootstrap()
             if(!strncmp(device_table[j].dev_modalias, event_device, strlen(event_device))) {
                 fb_table[i].dev_path =(char *) strdup(device_table[j].dev_path);
                 fb_table[i].dev_name =(char *) strdup(device_table[j].dev_name);
-                found = true;
+                fb_table[i].found = 1;
+
+                event_state[strlen(event_state) -1] = '\0';
+                sprintf(tmp, "EVENT=%s", event_state);
+                fb_table[i].dev_event = (char *) strdup(tmp);
+
                 break;
             }
         }
-        
-        if(found) {
-            event_state[strlen(event_state) -1] = '\0';
-            sprintf(tmp, "EVENT=%s", event_state);
-            uevent_params[0] = (char *) strdup(tmp);
+	}
+
+    /* always have fb0 device*/
+    if(fb_table[0].found == 0){
+        fb_table[0].dev_path = "UNKNOWN";
+        fb_table[0].dev_name = "UNKNOWN";
+        fb_table[0].found = 1;
+        fb_table[0].dev_event = "EVENT=plugin";
+    }else {
+        if(strcmp(fb_table[0].dev_event, "EVENT=plugin")){
+            fb_table[0].dev_event = "EVENT=plugin";
+        }
+    }
+
+    for(i = 0; fb_table[i].fb_path != NULL; i++) {
+        if(fb_table[i].found ==1) {
+            uevent_params[0] = (char *) fb_table[i].dev_event;
             uevent_params[1] = (char *) NULL;
             if (simulate_uevent(fb_table[i].dev_name, fb_table[i].dev_path, "add", uevent_params) < 0) {
                 LOGE("Error simulating uevent (%s)", strerror(errno));

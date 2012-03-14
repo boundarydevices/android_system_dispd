@@ -35,12 +35,14 @@ struct uevent_device {
     char *fb_path;
     char *dev_path;
     char *dev_name;
+    char *dev_event;
+    int found;
 };
 
 static struct uevent_device fb_table[] = {
-{0, "/sys/class/graphics/fb0", NULL, NULL},
-{2, "/sys/class/graphics/fb2", NULL, NULL},
-{-1, NULL,NULL,NULL}
+{0, "/sys/class/graphics/fb0", NULL, NULL, NULL, 0},
+{2, "/sys/class/graphics/fb2", NULL, NULL, NULL, 0},
+{-1, NULL, NULL, NULL, NULL, 0}
 };
 
 struct display_device {
