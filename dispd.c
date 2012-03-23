@@ -161,7 +161,6 @@ int main(int argc, char **argv)
 
             alen = sizeof(addr);
 
-            LOG_DISP("Accepted connection from framework 1");
             if (fw_sock != -1) {
                 LOGE("Dropping duplicate framework connection");
                 int tmp = accept(door_sock, &addr, &alen);
@@ -241,10 +240,11 @@ int send_msg_with_code(int code, char *message, int fbid)
     const char* arg;
     char tmp[1];
     int  len;
-    char fb[1];
+    char fb[2];
     if(fbid >= 0){
         fmt = "%.3d %s %s";
         fb[0] =  fbid + 48;
+        fb[1] = '\0';
         arg = fb;
     }else {
         fmt = "%.3d %s";
