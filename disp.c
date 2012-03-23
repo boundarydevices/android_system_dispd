@@ -39,13 +39,9 @@ int disp_connected_set(int fbid, boolean enabled)
     
     if(enabled) {
 //		read_graphics_fb_mode(fbid);
-        LOGI("rw.SECOND_DISPLAY_CONNECTED set to 1");
-        property_set("rw.SECOND_DISPLAY_CONNECTED", "1");
     }
     else{
         disp_class_list[fbid].disp_mode_length = 0;
-        LOGI("rw.SECOND_DISPLAY_CONNECTED set to 0");
-        property_set("rw.SECOND_DISPLAY_CONNECTED", "0");
     }
 
     //send_msg(enabled ? DISPD_EVT_DISP_CONNECTED : DISPD_EVT_DISP_DISCONNECTED);
@@ -291,7 +287,7 @@ char* disp_get_disp_modelist(int fbid)
     char temp_mode[20];
     int pointer =0;
     
-    memset(&disp_class_list[fbid], 0, sizeof(disp_class));
+    memset(&disp_class_list[fbid].disp_mode_list[0], 0, MAX_DISP_DEVICE_MODE*sizeof(disp_mode));
     read_graphics_fb_mode(fbid);
     
     for(i=0; i<disp_class_list[fbid].disp_mode_length; i++)

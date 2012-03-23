@@ -25,6 +25,7 @@
 #define DISPD_EVT_DISP_ENABLED            "disp_enabled"
 #define DISPD_EVT_DISP_DISABLED         "disp_disabled"
 #define MAX_DISP_DEVICE                  4
+#define MAX_DISP_DEVICE_MODE                  128
 
 static const int InterfaceListResult       = 110;
 
@@ -60,7 +61,7 @@ typedef struct
 {
     boolean disp_connected;
     boolean disp_enabled;
-    disp_mode disp_mode_list[128];
+    disp_mode disp_mode_list[MAX_DISP_DEVICE_MODE];
     int disp_mode_length;
 }
 disp_class;
@@ -74,7 +75,7 @@ static  disp_class disp_class_list[MAX_DISP_DEVICE];
 
 //static int disp_mode_length  = 0;
 //static disp_mode disp_mode_list[128];
-static disp_mode disp_mode_req;
+//static disp_mode disp_mode_req;
 
 
 
