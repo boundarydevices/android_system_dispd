@@ -280,13 +280,44 @@ set_graphics_fb_mode_error:
     return -1;
 }
 
+static disp_mode g_config_mode[MAX_DISP_DEVICE_MODE];
+static int g_config_len = 0;
+
 char* disp_get_disp_modelist(int fbid)
 {
     LOGI("disp_get_disp_modelist");
     int i;
     char temp_mode[20];
     int pointer =0;
-    
+
+    if (g_config_len == 0) {
+        char conf_modes[1024];
+        int size;
+        memset(conf_modes, 0, sizeof(conf_modes));
+        memset(&g_config_mode[0], 0, sizeof(g_config_mode));
+        int fd = open("/system/etc/display_mode.conf", O_RDONLY, 0);
+        if(fd < 0) {
+            LOGE("Warning: /system/etc/display_mode.conf not defined");
+        }
+        else {
+            size = read(fd, conf_modes, sizeof(conf_modes));
+            if(size > 0) {
+                char* m_start = conf_modes;
+                int m_len = 0;
+                char *pmode = conf_modes;
+                while(*pmode != '\0') {
+                    if (*pmode == '\n') {
+                        m_len = pmode - m_start + 1;
+                        strncpy(g_config_mode[g_config_len].mode, m_start, m_len);
+                        g_config_len ++;
+                        m_start = pmode + 1;
+                    }
+                    pmode ++;
+                }//while
+            }
+        }//else
+    }
+
     memset(&disp_class_list[fbid].disp_mode_list[0], 0, MAX_DISP_DEVICE_MODE*sizeof(disp_mode));
     read_graphics_fb_mode(fbid);
     
@@ -296,10 +327,21 @@ char* disp_get_disp_modelist(int fbid)
         //pointer = pointer +  strlen(disp_mode_list[i].mode) -1;
         //strncpy(temp_mode+pointer, " ", 1);
         //pointer = pointer +  1;
-
-        strncpy(temp_mode, disp_class_list[fbid].disp_mode_list[i].mode, strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1);
-        temp_mode[strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1] = '\0';
-        send_msg_with_code(InterfaceListResult, temp_mode, -1);
+        if (g_config_len > 0) {
+            int k;
+            for(k=0; k<g_config_len; k++) {
+                if(!strcmp(g_config_mode[k].mode, disp_class_list[fbid].disp_mode_list[i].mode)) {
+                    strncpy(temp_mode, disp_class_list[fbid].disp_mode_list[i].mode, strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1);
+                    temp_mode[strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1] = '\0';
+                    send_msg_with_code(InterfaceListResult, temp_mode, -1);
+                }
+            }
+        }
+        else {
+            strncpy(temp_mode, disp_class_list[fbid].disp_mode_list[i].mode, strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1);
+            temp_mode[strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1] = '\0';
+            send_msg_with_code(InterfaceListResult, temp_mode, -1);
+        }
     }
     
     //temp_mode[pointer] = '\0';
