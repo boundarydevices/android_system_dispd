@@ -289,6 +289,8 @@ char* disp_get_disp_modelist(int fbid)
     int i;
     char temp_mode[20];
     int pointer =0;
+    char mode_send[MAX_DISP_DEVICE_MODE][20];
+    int num_send = 0;
 
     if (g_config_len == 0) {
         char conf_modes[1024];
@@ -320,6 +322,7 @@ char* disp_get_disp_modelist(int fbid)
 
     memset(&disp_class_list[fbid].disp_mode_list[0], 0, MAX_DISP_DEVICE_MODE*sizeof(disp_mode));
     read_graphics_fb_mode(fbid);
+    memset(mode_send, 0, sizeof(mode_send));
     
     for(i=0; i<disp_class_list[fbid].disp_mode_length; i++)
     {
@@ -328,12 +331,21 @@ char* disp_get_disp_modelist(int fbid)
         //strncpy(temp_mode+pointer, " ", 1);
         //pointer = pointer +  1;
         if (g_config_len > 0) {
-            int k;
+            int k, j;
             for(k=0; k<g_config_len; k++) {
                 if(!strcmp(g_config_mode[k].mode, disp_class_list[fbid].disp_mode_list[i].mode)) {
                     strncpy(temp_mode, disp_class_list[fbid].disp_mode_list[i].mode, strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1);
                     temp_mode[strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1] = '\0';
-                    send_msg_with_code(InterfaceListResult, temp_mode, -1);
+                    for(j=0; j<num_send; j++) {
+                        if(!strcmp(mode_send[j], temp_mode)) {
+                            break;
+                        }
+                    }
+                    if(j == num_send) {
+                        strcpy(mode_send[num_send], temp_mode);
+                        num_send++;
+                        send_msg_with_code(InterfaceListResult, temp_mode, -1);
+                    }
                 }
             }
         }
