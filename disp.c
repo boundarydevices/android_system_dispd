@@ -28,7 +28,7 @@
 
 int disp_connected_set(int fbid, boolean enabled)
 {
-    LOGI("disp_connected_set(): %d",enabled);
+    LOGI("disp_connected_set(): fbid=%d, enable=%d", fbid, enabled);
     disp_class_list[fbid].disp_connected = enabled;
     //Disable the connection will also automatically disable the display
     if((disp_class_list[fbid].disp_connected == false) && (disp_class_list[fbid].disp_enabled == true)) {

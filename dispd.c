@@ -50,12 +50,11 @@
 /*
  * Globals
  */
-
 static int ver_major = 1;
 static int ver_minor = 0;
 static pthread_mutex_t write_mutex = PTHREAD_MUTEX_INITIALIZER;
 static int fw_sock = -1;
-
+extern char* getDisplayName(int fbid);
 int bootstrap = 0;
 
 int main(int argc, char **argv)
@@ -115,7 +114,7 @@ int main(int argc, char **argv)
 
     bootstrap = 1;
 
-	fb_detection_bootstrap();
+    fb_detection_bootstrap();
 
     bootstrap = 0;
     /*
@@ -194,7 +193,7 @@ int main(int argc, char **argv)
         }
 
         if (FD_ISSET(uevent_sock, &read_fds)) {
-            LOG_DISP("process uevent from kernel");
+            //LOG_DISP("process uevent from kernel");
             if ((rc = process_uevent_message(uevent_sock)) < 0) {
                 LOGE("Error processing uevent msg (%s)", strerror(errno));
             }
@@ -241,8 +240,10 @@ int send_msg_with_code(int code, char *message, int fbid)
     char tmp[1];
     int  len;
     char fb[2];
+    char *name = NULL;
     if(fbid >= 0){
-        fmt = "%.3d %s %s";
+        name = getDisplayName(fbid);
+        fmt = "%.3d %s %s %s";
         fb[0] =  fbid + 48;
         fb[1] = '\0';
         arg = fb;
@@ -252,10 +253,10 @@ int send_msg_with_code(int code, char *message, int fbid)
     }
     
     /* Measure length of required buffer */
-    len = snprintf(tmp, sizeof tmp, fmt, code, message, arg);
+    len = snprintf(tmp, sizeof tmp, fmt, code, message, arg, name);
     /* Allocate in the stack, then write to it */
     buf = (char*)alloca(len+1);
-    snprintf(buf, len+1, fmt, code, message, arg);
+    snprintf(buf, len+1, fmt, code, message, arg, name);
     /* Send the zero-terminated message */
     return send_msg(buf);
 }

@@ -29,173 +29,147 @@
 #include "uevent.h"
 
 #define DEBUG_BOOTSTRAP 0
+#define DISPLAY_MAX 6
+static struct uevent_device g_display[DISPLAY_MAX];
+
+extern int handle_display(int fbid);
 
 int fb_detection_bootstrap()
 {
-    char path_state[255];
-    char path_modalias[255];   
-     
-    char event_state[255];
-    char event_device[255];
-
+    char fb_path[255];
+    char value[255];
     char tmp[255];
     char *uevent_params[2];
     FILE *fp;
 
-    LOGI("fb_detection_bootstrap IN");
-    int i,j;
+    int i;
 
-    for(i = 0; fb_table[i].fb_path != NULL; i++) {
-        memset(path_state,    0, 255);
-        memset(path_modalias, 0, 255);
-        memset(event_state,   0, 255);
-        memset(event_device,  0, 255);
-        
-            strcpy(path_state,fb_table[i].fb_path);
-            strcat(path_state,SYSFS_CLASS_FB_DETECTION_PATH_STATE);
-            if (!(fp = fopen(path_state, "r"))) {
-                LOGE("Error opening fb name path '%s' (%s)", path_state, strerror(errno));
-                continue;
+    for(i=0; i<DISPLAY_MAX; i++) {
+        g_display[i].fb_id = i;
+        g_display[i].fb_path = NULL;//"/sys/class/graphics/fb";
+        g_display[i].dev_path = NULL;
+        g_display[i].dev_name = NULL;
+        g_display[i].dev_event = NULL;
+        g_display[i].found = 0;
+    }
+
+    for(i=0; i<DISPLAY_MAX; i++) {
+        memset(fb_path,    0, 255);
+        snprintf(fb_path, 250, "/sys/class/graphics/fb%d", i);
+
+        //first to check if the device exist
+        if(!(fp = fopen(fb_path, "r"))) {
+            LOGW("warning: fb%d %s device does not exist", i, fb_path);
+            continue;
+        }
+        fclose(fp);
+
+        //second to check if it is a BG or FG device
+        //FG device is overlay, BG is real device.
+        memset(tmp, 0, 255);
+        strcpy(tmp, fb_path);
+        strcat(tmp, "/name");
+        if(!(fp = fopen(tmp, "r"))) {
+            LOGE("error: open fb%d name path '%s' (%s) failed", i, tmp, strerror(errno));
+            continue;
+        }
+        memset(value,  0, 255);
+        if (!fgets(value, sizeof(value), fp)) {
+            LOGE("Unable to read fb%d name %s", i, tmp);
+            fclose(fp);
+            continue;
+        }
+        if(strstr(value, "FG")) {
+            LOGI("fb%d is overlay device", i);
+            fclose(fp);
+            continue;
+        }
+        fclose(fp);
+
+        //read fb device name
+        memset(tmp, 0, 255);
+        strcpy(tmp, fb_path);
+        strcat(tmp, "/fsl_disp_dev_property");
+        if(!(fp = fopen(tmp, "r"))) {
+            LOGE("Unable to open fb%d, %s", i, tmp);
+            //if open failed make default name to ldb.
+            g_display[i].dev_name = "ldb";
+            LOGI("fb%d is device %s", i, g_display[i].dev_name);
+        } else {
+            memset(value,  0, 255);
+            if (!fgets(value, sizeof(value), fp)) {
+                LOGE("Unable to read fb%d value %s", i, tmp);
+                //if read failed make default name to ldb.
+                g_display[i].dev_name = "ldb";
+            } else {
+                g_display[i].dev_name = (char *) strdup(value);
+                char *pc = g_display[i].dev_name;
+                while(*pc != '\0')  {
+                    if(*pc == '\n') {
+                        *pc = '\0';
+                    }
+                    pc ++;
+                }
             }
-            if (!fgets(event_state, sizeof(event_state), fp)) {
-                LOGE("Unable to read device cable_state");
-                fclose(fp);
-                continue;
-            }
-            fclose(fp);        
-    
-            strcpy(path_modalias, fb_table[i].fb_path);
-            strcat(path_modalias, SYSFS_CLASS_FB_DETECTION_PATH_MODALIAS);
-            if (!(fp = fopen(path_modalias, "r"))) {
-                LOGE("Error opening fb name path '%s' (%s)", path_modalias, strerror(errno));
-                continue;
-            }
-            if (!fgets(event_device, sizeof(event_device), fp)) {
-                LOGE("Unable to read device cable_state");
-                fclose(fp);
-                continue;
+            LOGI("fb%d is device %s", i, g_display[i].dev_name);
+            fclose(fp);
+        }
+
+        //third to check if it is a plugable device.
+        memset(tmp, 0, 255);
+        strcpy(tmp, fb_path);
+        strcat(tmp, "/disp_dev/cable_state");
+        if(!(fp = fopen(tmp, "r"))) {
+            //if it is not a plugable device.
+            LOGI("fb%d is not plugable device", i);
+            g_display[i].dev_event = "EVENT=plugin";
+            g_display[i].found = 1;
+            continue;
+        }
+
+        //plugable device flag.
+        g_display[i].dev_path = g_display[i].dev_name;
+        memset(value,  0, 255);
+        if (!fgets(value, sizeof(value), fp)) {
+            LOGE("Unable to read fb%d value %s", i, tmp);
+            fclose(fp);
+        } else {
+            if(strstr(value, "plugout")) {
+                LOGI("fb%d device plugout", i);
+            } else {
+                g_display[i].found = 1;
+                g_display[i].dev_event = "EVENT=plugin";
             }
             fclose(fp);
-        
-        event_device[strlen(event_device) -1] = '\0';
-
-        for(j =0; device_table[j].dev_path!=NULL; j++) {
-            if(!strncmp(device_table[j].dev_modalias, event_device, strlen(event_device))) {
-                fb_table[i].dev_path =(char *) strdup(device_table[j].dev_path);
-                fb_table[i].dev_name =(char *) strdup(device_table[j].dev_name);
-                fb_table[i].found = 1;
-
-                event_state[strlen(event_state) -1] = '\0';
-                sprintf(tmp, "EVENT=%s", event_state);
-                fb_table[i].dev_event = (char *) strdup(tmp);
-
-                break;
-            }
-        }
-	}
-
-    /* always have fb0 device*/
-    if(fb_table[0].found == 0){
-        fb_table[0].dev_path = "UNKNOWN";
-        fb_table[0].dev_name = "UNKNOWN";
-        fb_table[0].found = 1;
-        fb_table[0].dev_event = "EVENT=plugin";
-    }else {
-        if(strcmp(fb_table[0].dev_event, "EVENT=plugin")){
-            fb_table[0].dev_event = "EVENT=plugin";
         }
     }
 
-    for(i = 0; fb_table[i].fb_path != NULL; i++) {
-        if(fb_table[i].found ==1) {
-            uevent_params[0] = (char *) fb_table[i].dev_event;
-            uevent_params[1] = (char *) NULL;
-            if (simulate_uevent(fb_table[i].dev_name, fb_table[i].dev_path, "add", uevent_params) < 0) {
-                LOGE("Error simulating uevent (%s)", strerror(errno));
-                return -errno;
-            }
+    for(i=0; i<DISPLAY_MAX; i++) {
+        if(g_display[i].found == 1) {
+            handle_display(g_display[i].fb_id);
         }
     }
+
     return 0;
 }
 
-
-
 int getDisplayfbid(char *path)
 {
-    
     int i;
-    for(i = 0; fb_table[i].fb_path != NULL; i++) {
-        if(fb_table[i].dev_path != NULL && !strcmp(fb_table[i].dev_path, path))
-        {
-            return fb_table[i].fb_id;
+
+    for(i=0; i<DISPLAY_MAX; i++) {
+        if((g_display[i].dev_path != NULL) && strstr(path, g_display[i].dev_path)) {
+            return g_display[i].fb_id;
         }
     }
     return -1;
 }
 
-
-
-int flush_fb_detection()
+char* getDisplayName(int fbid)
 {
-    char path_state[255];
-    char path_modalias[255];   
-     
-    char event_state[255];
-    char event_device[255];
-
-    char tmp[255];
-    char *uevent_params[2];
-    FILE *fp;
-    boolean  found;
-
-
-    LOGI("fb_detection_bootstrap IN");
-    int i,j;
-    
-    for(i = 0; fb_table[i].fb_path != NULL; i++) {
-        memset(path_state,    0, 255);
-        memset(path_modalias, 0, 255);
-        memset(event_state,   0, 255);
-        memset(event_device,  0, 255);
-        found = false;
-        
-            strcpy(path_state,fb_table[i].fb_path);
-            strcat(path_state,SYSFS_CLASS_FB_DETECTION_PATH_STATE);
-            if (!(fp = fopen(path_state, "r"))) {
-                LOGE("Error opening fb name path '%s' (%s)", path_state, strerror(errno));
-                continue;
-            }
-            if (!fgets(event_state, sizeof(event_state), fp)) {
-                LOGE("Unable to read device cable_state");
-                fclose(fp);
-                continue;
-            }
-            fclose(fp);        
-    
-            strcpy(path_modalias, fb_table[i].fb_path);
-            strcat(path_modalias, SYSFS_CLASS_FB_DETECTION_PATH_MODALIAS);
-            if (!(fp = fopen(path_modalias, "r"))) {
-                LOGE("Error opening fb name path '%s' (%s)", path_modalias, strerror(errno));
-                continue;
-            }
-            if (!fgets(event_device, sizeof(event_device), fp)) {
-                LOGE("Unable to read device cable_state");
-                fclose(fp);
-                continue;
-            }
-            fclose(fp);
-        
-        event_device[strlen(event_device) -1] = '\0';
-
-        for(j =0; device_table[j].dev_path!=NULL; j++) {
-            if(!strncmp(device_table[j].dev_modalias, event_device, strlen(event_device))) {
-                fb_table[i].dev_path =(char *) strdup(device_table[j].dev_path);
-                fb_table[i].dev_name =(char *) strdup(device_table[j].dev_name);
-                found = true;
-                break;
-            }
-        }
+    if(fbid < 0 || fbid >= DISPLAY_MAX) {
+        return NULL;
     }
-    return 0;
+
+    return g_display[fbid].dev_name;
 }

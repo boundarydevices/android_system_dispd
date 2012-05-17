@@ -24,7 +24,7 @@
 #define DISPD_EVT_DISP_DISCONNECTED         "disp_disconnected"
 #define DISPD_EVT_DISP_ENABLED            "disp_enabled"
 #define DISPD_EVT_DISP_DISABLED         "disp_disabled"
-#define MAX_DISP_DEVICE                  4
+#define MAX_DISP_DEVICE                  6
 #define MAX_DISP_DEVICE_MODE                  128
 
 static const int InterfaceListResult       = 110;

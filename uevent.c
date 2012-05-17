@@ -137,6 +137,20 @@ int process_uevent_message(int socket)
     return rc;
 }
 
+int handle_display(int fbid)
+{
+    LOGI("handle_display: fbid %d", fbid);
+
+    if(fbid < 0) {
+        LOGE("error fbid");
+        return 0;
+    }
+
+    dispmgr_connected_set(fbid, true);
+
+    return 0;
+}
+
 int simulate_uevent(char *subsys, char *path, char *action, char **params)
 {
     struct uevent *event;
