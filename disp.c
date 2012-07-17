@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2010-2012 Freescale Semiconductor, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/* Copyright (c) 2010-2012 Freescale Semiconductor, Inc. */
 
 #include <fcntl.h>
 #include <errno.h>
@@ -36,7 +35,7 @@ int disp_connected_set(int fbid, boolean enabled)
         //send_msg(DISPD_EVT_DISP_DISABLED);
 		send_msg_with_code(InterfaceDisabled, DISPD_EVT_DISP_DISABLED, fbid);
     }
-    
+
     if(enabled) {
 //		read_graphics_fb_mode(fbid);
     }
@@ -45,7 +44,7 @@ int disp_connected_set(int fbid, boolean enabled)
     }
 
     //send_msg(enabled ? DISPD_EVT_DISP_CONNECTED : DISPD_EVT_DISP_DISCONNECTED);
-    send_msg_with_code(enabled ? InterfaceConnected: InterfaceDisconnected, 
+    send_msg_with_code(enabled ? InterfaceConnected: InterfaceDisconnected,
                     enabled ? DISPD_EVT_DISP_CONNECTED : DISPD_EVT_DISP_DISCONNECTED, fbid);
     return 0;
 }
@@ -66,7 +65,7 @@ int disp_enabled_set(int fbid, boolean enabled)
     }
     disp_class_list[fbid].disp_enabled = enabled;
 
-    send_msg_with_code(enabled ? InterfaceEnabled: InterfaceDisabled, 
+    send_msg_with_code(enabled ? InterfaceEnabled: InterfaceDisabled,
                     enabled ? DISPD_EVT_DISP_ENABLED : DISPD_EVT_DISP_DISABLED, fbid);
 
     return 0;
@@ -87,12 +86,12 @@ int disp_send_status()
 #endif
     for(i=0; i<MAX_DISP_DEVICE; i++)
     {
-        rc = send_msg_with_code(disp_connected_get(i) ? InterfaceConnected: InterfaceDisconnected, 
+        rc = send_msg_with_code(disp_connected_get(i) ? InterfaceConnected: InterfaceDisconnected,
                     disp_connected_get(i) ? DISPD_EVT_DISP_CONNECTED : DISPD_EVT_DISP_DISCONNECTED, i);
         if (rc < 0)
             return rc;
 
-        rc = send_msg_with_code(disp_enabled_get(i) ? InterfaceEnabled: InterfaceDisabled, 
+        rc = send_msg_with_code(disp_enabled_get(i) ? InterfaceEnabled: InterfaceDisabled,
                     disp_enabled_get(i) ? DISPD_EVT_DISP_ENABLED : DISPD_EVT_DISP_DISABLED, i);
         if (rc < 0)
             return rc;
@@ -145,7 +144,8 @@ int disp_mode_compare( const void *arg1, const void *arg2)
 int get_available_mode(int fbid, const char *mode_list)
 {
 	int disp_threshold = 0;
-	int i,disp_mode_count = 0;
+	int i;
+	unsigned int disp_mode_count = 0;
 	read_state state = CHECK_NEXT_STATE;
 	char *p = (char *)mode_list;
 	char *start = p;
@@ -172,7 +172,7 @@ int get_available_mode(int fbid, const char *mode_list)
 			break;
 		case FIND_WIDTH_STATE:
 			if(p[0]>='0' && p[0]<='9')
-			{    
+			{
 			    len = 0;
 				disp_class_list[fbid].disp_mode_list[disp_mode_count].width = str2int(p, &len);
 				state = FIND_JOINT_STATE;
@@ -208,7 +208,7 @@ int get_available_mode(int fbid, const char *mode_list)
 			break;
 		case  FREQUENCY_STATE:
 			if(p[0]>='0' && p[0]<='9')
-			{    
+			{
 			    len = 0;
 				disp_class_list[fbid].disp_mode_list[disp_mode_count].freq = str2int(p,&len);
 				state = FIND_NEWLINE_STATE;
@@ -220,7 +220,7 @@ int get_available_mode(int fbid, const char *mode_list)
 			if(p[0] == '\n')
 			{
 				end = p+1;
-				strncpy(disp_class_list[fbid].disp_mode_list[disp_mode_count].mode, start, (size_t)end -(size_t)start); 
+				strncpy(disp_class_list[fbid].disp_mode_list[disp_mode_count].mode, start, (size_t)end -(size_t)start);
 				disp_mode_count ++;
 				state = CHECK_NEXT_STATE;
 				p++;
@@ -243,7 +243,7 @@ check_mode_end:
     return 0;
 }
 
-int read_graphics_fb_mode(int fb) 
+int read_graphics_fb_mode(int fb)
 {
     int size=0;
     int fp_modes=0;
@@ -282,12 +282,12 @@ set_graphics_fb_mode_error:
 
 static disp_mode g_config_mode[MAX_DISP_DEVICE_MODE];
 static int g_config_len = 0;
+static char mode[20];
 
 char* disp_get_disp_modelist(int fbid)
 {
     LOGI("disp_get_disp_modelist");
     int i;
-    char temp_mode[20];
     int pointer =0;
     char mode_send[MAX_DISP_DEVICE_MODE][20];
     int num_send = 0;
@@ -323,66 +323,62 @@ char* disp_get_disp_modelist(int fbid)
     memset(&disp_class_list[fbid].disp_mode_list[0], 0, MAX_DISP_DEVICE_MODE*sizeof(disp_mode));
     read_graphics_fb_mode(fbid);
     memset(mode_send, 0, sizeof(mode_send));
-    
+
     for(i=0; i<disp_class_list[fbid].disp_mode_length; i++)
     {
-        //strncpy(temp_mode+pointer, disp_mode_list[i].mode, strlen(disp_mode_list[i].mode)-1);
+        //strncpy(mode+pointer, disp_mode_list[i].mode, strlen(disp_mode_list[i].mode)-1);
         //pointer = pointer +  strlen(disp_mode_list[i].mode) -1;
-        //strncpy(temp_mode+pointer, " ", 1);
+        //strncpy(mode+pointer, " ", 1);
         //pointer = pointer +  1;
         if (g_config_len > 0) {
             int k, j;
             for(k=0; k<g_config_len; k++) {
                 if(!strcmp(g_config_mode[k].mode, disp_class_list[fbid].disp_mode_list[i].mode)) {
-                    strncpy(temp_mode, disp_class_list[fbid].disp_mode_list[i].mode, strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1);
-                    temp_mode[strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1] = '\0';
+                    strncpy(mode, disp_class_list[fbid].disp_mode_list[i].mode, strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1);
+                    mode[strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1] = '\0';
                     for(j=0; j<num_send; j++) {
-                        if(!strcmp(mode_send[j], temp_mode)) {
+                        if(!strcmp(mode_send[j], mode)) {
                             break;
                         }
                     }
                     if(j == num_send) {
-                        strcpy(mode_send[num_send], temp_mode);
+                        strcpy(mode_send[num_send], mode);
                         num_send++;
-                        send_msg_with_code(InterfaceListResult, temp_mode, -1);
+                        send_msg_with_code(InterfaceListResult, mode, -1);
                     }
                 }
             }
         }
         else {
-            strncpy(temp_mode, disp_class_list[fbid].disp_mode_list[i].mode, strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1);
-            temp_mode[strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1] = '\0';
-            send_msg_with_code(InterfaceListResult, temp_mode, -1);
+            strncpy(mode, disp_class_list[fbid].disp_mode_list[i].mode, strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1);
+            mode[strlen(disp_class_list[fbid].disp_mode_list[i].mode)-1] = '\0';
+            send_msg_with_code(InterfaceListResult, mode, -1);
         }
     }
-    
-    //temp_mode[pointer] = '\0';
-    //LOGW("modelist = %s", temp_mode);
-    
+
+    //mode[pointer] = '\0';
+    //LOGW("modelist = %s", mode);
+
     send_msg_with_code(CommandOkay, "Interface list completed", -1);
-    return temp_mode;    
+    return mode;
 }
 
 
 int disp_set_disp_mode(int fbid, char *cmd)
 {
     LOGI("disp_set_disp_mode %s", cmd);
-    
+
     char *p = (char *)cmd;
     char *start;
     if(!p)  goto set_out;
 
-	while(p[0])
-	{
-	   if(p[0] == ' ')
-	   {
-	       start = p+1;
-	       break;
-       }
-       p++;	       
-	}
-    
-    LOGW("disp_mode %s ",start);
+    while(p[0]) {
+        if(p[0] == ' ') {
+            start = p+1;
+            break;
+        }
+        p++;
+    }
 
 set_out:
     send_msg_with_code(CommandOkay, "mode have been set", -1);

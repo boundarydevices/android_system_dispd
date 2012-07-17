@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2010-2012 Freescale Semiconductor, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +16,6 @@
  * limitations under the License.
  */
 
-/* Copyright (c) 2010-2012 Freescale Semiconductor, Inc. */
 
 #include <errno.h>
 #include <stdio.h>
@@ -29,6 +29,7 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/un.h>
 
 #include <cutils/config_utils.h>
@@ -78,7 +79,7 @@ int main(int argc, char **argv)
     }
 
     if (listen(door_sock, 4) < 0) {
-        LOGE("Unable to listen on fd '%d' for socket '%s': %s", 
+        LOGE("Unable to listen on fd '%d' for socket '%s': %s",
              door_sock, DISPD_SOCKET, strerror(errno));
         exit(1);
     }
@@ -109,7 +110,7 @@ int main(int argc, char **argv)
     }
 
     /*
-     * Bootstrap 
+     * Bootstrap
      */
 
     bootstrap = 1;
@@ -251,7 +252,7 @@ int send_msg_with_code(int code, char *message, int fbid)
         fmt = "%.3d %s";
         arg = NULL;
     }
-    
+
     /* Measure length of required buffer */
     len = snprintf(tmp, sizeof tmp, fmt, code, message, arg, name);
     /* Allocate in the stack, then write to it */

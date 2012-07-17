@@ -17,8 +17,8 @@
 
 /* Copyright (C) 2012 Freescale Semiconductor, Inc. */
 
-#ifndef _HDMI_DETECTION_H
-#define _HDMI_DETECTION_H
+#ifndef _FB_DETECTION_H
+#define _FB_DETECTION_H
 
 #include "dispd.h"
 
