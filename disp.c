@@ -282,7 +282,7 @@ set_graphics_fb_mode_error:
 
 static disp_mode g_config_mode[MAX_DISP_DEVICE_MODE];
 static int g_config_len = 0;
-static char mode[20];
+static char mode[MAX_MODE_LEN];
 
 char* disp_get_disp_modelist(int fbid)
 {
@@ -291,15 +291,18 @@ char* disp_get_disp_modelist(int fbid)
     int pointer =0;
     char mode_send[MAX_DISP_DEVICE_MODE][20];
     int num_send = 0;
+    char file_name[MAX_FILE_NAME_LEN];
 
     if (g_config_len == 0) {
-        char conf_modes[1024];
+        char conf_modes[MAX_MODE_FILE_LEN];
         int size;
         memset(conf_modes, 0, sizeof(conf_modes));
         memset(&g_config_mode[0], 0, sizeof(g_config_mode));
-        int fd = open("/system/etc/display_mode.conf", O_RDONLY, 0);
+        memset(file_name, 0, sizeof(file_name));
+        sprintf(file_name, "/system/etc/display_mode_fb%d.conf", fbid);
+        int fd = open(file_name, O_RDONLY, 0);
         if(fd < 0) {
-            LOGE("Warning: /system/etc/display_mode.conf not defined");
+            LOGE("Warning: file %s not exists", file_name);
         }
         else {
             size = read(fd, conf_modes, sizeof(conf_modes));
@@ -317,6 +320,7 @@ char* disp_get_disp_modelist(int fbid)
                     pmode ++;
                 }//while
             }
+        close(fd);
         }//else
     }
 
@@ -356,6 +360,7 @@ char* disp_get_disp_modelist(int fbid)
         }
     }
 
+    g_config_len = 0;
     //mode[pointer] = '\0';
     //LOGW("modelist = %s", mode);
 

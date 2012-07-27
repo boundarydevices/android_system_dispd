@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/* Copyright (c) 2010-2012 Freescale Semiconductor, Inc. */
+/* Copyright (C) 2010-2012 Freescale Semiconductor, Inc. */
 
 #ifndef _DISP_H
 #define _DISP_H
@@ -26,6 +26,9 @@
 #define DISPD_EVT_DISP_DISABLED         "disp_disabled"
 #define MAX_DISP_DEVICE                  6
 #define MAX_DISP_DEVICE_MODE                  128
+#define MAX_FILE_NAME_LEN       256
+#define MAX_MODE_FILE_LEN       1024
+#define MAX_MODE_LEN       20
 
 static const int InterfaceListResult       = 110;
 
@@ -39,7 +42,7 @@ static const int InterfaceDisabled         = 603;
 
 typedef struct
 {
-	char mode[20];
+	char mode[MAX_MODE_LEN];
 	int width;
 	int height;
 	int freq;
