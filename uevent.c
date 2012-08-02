@@ -67,7 +67,6 @@ static int handle_mxc_ldb_event(struct uevent *);
 static int handle_unknown_event(struct uevent *);
 
 static struct uevent_dispatch dispatch_table[] = {
-    { "switch", NULL, handle_switch_event }, 
     { "mxc_ddc", "/devices/platform/mxc_ddc.0", handle_dvi_event },
     { "sii902x", "/devices/platform/sii902x.0",handle_sii9022_event },
     { "mxc_hdmi", "/devices/platform/mxc_hdmi", handle_mxc_hdmi_event },
